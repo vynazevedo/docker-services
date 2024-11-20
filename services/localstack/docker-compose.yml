@@ -1,0 +1,10 @@
+services:
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,lambda,sns,sqs
+      - DEFAULT_REGION=us-east-2
+    volumes:
+      - "./data:/var/lib/localstack"
