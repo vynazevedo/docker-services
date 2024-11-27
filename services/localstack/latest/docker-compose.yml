@@ -1,10 +1,17 @@
 services:
   localstack:
-    image: localstack/localstack:latest
+    profiles: ["localstack"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: "localstack"
     ports:
-      - "4566:4566"
+      - "4566-4599:4566-4599"
     environment:
+      - AWS_DEFAULT_REGION=us-east-2
+      - AWS_ACCESS_KEY_ID=fakeAccessKeyId
+      - AWS_SECRET_ACCESS_KEY=fakeSecretAccessKey
       - SERVICES=s3,lambda,sns,sqs
-      - DEFAULT_REGION=us-east-2
     volumes:
-      - "./data:/var/lib/localstack"
+      - "./volume:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
