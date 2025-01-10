@@ -1,0 +1,14 @@
+services:  
+  redis:
+    container_name: {namespace}-shared-redis
+    image: redis:latest
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    ports:
+      - "6379:6379"
+    networks:
+      - {namespace}_network
