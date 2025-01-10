@@ -2,7 +2,7 @@ MAKEFLAGS += --no-print-directory
 
 # === Variáveis ===
 WORKSPACE_DIR=workspace
-PROJECTS := {project1,project2,project3}
+PROJECTS := {}
 
 PROJECT ?= all
 
@@ -38,7 +38,30 @@ else \
 	cd $(WORKSPACE_DIR)/$(PROJECT) && make $(1); \
 fi
 
-start: check-infra ## Inicia projeto(s)
+check-deps: ## Verifica dependências necessárias
+	@echo "Verificando dependencias..."
+	@docker compose version | grep -q "v2." && \
+   	(docker compose version | awk '{print $$4}' | awk -F. '$$2 > 29 || ($$2 == 29 && $$3 >= 7)' || \
+   	(echo "Error: Docker Compose v2.29.7 ou superior é necessário"; exit 1))
+	@if ! node -v | grep -q "v18" ; then \
+		echo "Error: Node.js 18 e necessario para este projeto"; \
+		exit 1; \
+	fi
+	@command -v serverless >/dev/null 2>&1 || { \
+		echo "Instalando serverless@3.38.0 globalmente..."; \
+		npm i -g serverless@3.38.0 || sudo npm i -g serverless@3.38.0; \
+	}
+	@npm list -g serverless-offline >/dev/null 2>&1 || { \
+		echo "Instalando serverless-offline globalmente..."; \
+		npm i -g serverless-offline || sudo npm i -g serverless-offline; \
+	}
+	@npm list -g serverless-localstack >/dev/null 2>&1 || { \
+		echo "Instalando serverless-localstack globalmente..."; \
+		npm i -g serverless-localstack || sudo npm i -g serverless-localstack; \
+	}
+
+
+start: check-deps check-infra ## Inicia projeto(s)
 	$(call execute-command,$@)
 
 stop: ## Para projeto(s)
@@ -47,13 +70,13 @@ stop: ## Para projeto(s)
 clean: ## Remove recursos
 	$(call execute-command,$@)
 
-test: check-infra ## Executa testes
+test: check-deps check-infra ## Executa testes
 	$(call execute-command,$@)
 
 test-all: check-infra ## Executa todos os testes
 	$(call execute-command,$@)
 
-dev: check-infra ## Pipeline de desenvolvimento
+dev: check-deps check-infra ## Pipeline de desenvolvimento
 	$(call execute-command,$@)
 
 # === Status ===
@@ -75,9 +98,9 @@ status: ## Status de todos os serviços
 help: ## Lista comandos disponíveis
 	@echo "Uso: make [comando] [PROJECT=nome-do-projeto]"
 	@echo ""
-	@echo "Comandos disponíveis:"
+	@echo "Comandos disponiveis:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: check-infra infra-start infra-stop start stop clean test dev status help
+.PHONY: check-deps check-infra infra-start infra-stop start stop clean test dev status help
 .DEFAULT_GOAL := help
