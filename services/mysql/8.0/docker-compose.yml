@@ -1,6 +1,6 @@
 services:
   mysql:
-    container_name: {namespace}-shared-mysql
+    container_name: shared-mysql
     restart: always
     build:
       context: .

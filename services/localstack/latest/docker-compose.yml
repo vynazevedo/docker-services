@@ -1,10 +1,9 @@
 services:
   localstack:
-    profiles: ["localstack"]
+    container_name: localstack
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: "localstack"
+      dockerfile: Dockerfile    
     ports:
       - "4566-4599:4566-4599"
     environment:
